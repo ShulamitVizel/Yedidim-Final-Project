@@ -1,0 +1,18 @@
+
+# Ignore Visual Studio temporary files, build results, and user-specific files
+.vs/
+*.user
+*.suo
+
+# Build results
+bin/
+obj/
+
+# Database files (optional - remove if you want to include DB)
+*.mdf
+*.ldf
+
+# Others
+*.log
+*.tmp
+*.cache
