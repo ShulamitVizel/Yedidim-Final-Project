@@ -13,4 +13,6 @@ public interface ICallBl
     void UpdateCall(Call call);
     Call? GetCallById(int callId);
     void AssignVolunteerToCall(int callId, int volunteerId);
+    Task<bool> AssignNearestVolunteerAsync(int callId);
+
 }

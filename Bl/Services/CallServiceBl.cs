@@ -8,16 +8,23 @@ using System.Threading.Tasks;
 using Dal;
 using Dal.Models;
 using Dal.Services;
+using Bl.Api;
+using Microsoft.Extensions.Configuration;
 
 namespace Bl.Services
 {
-    public class CallBl : ICallBl
+    public class CallServiceBl : ICallBl
     {
         private readonly CallDal _callDal;
+        private readonly VolunteerDal _volunteerDal;
+        private readonly IGoogleMapsService _googleMapsService;
 
-        public CallBl(CallDal callDal)
+        public CallServiceBl(CallDal callDal, VolunteerDal volunteerDal, IGoogleMapsService googleMapsService)
         {
+            _volunteerDal = volunteerDal;
+
             _callDal = callDal;
+            _googleMapsService = googleMapsService;
         }
 
         public void CreateCall(Models.Call call)
@@ -76,6 +83,73 @@ namespace Bl.Services
                 // אפשרות להוסיף מיפוי מתנדבים ולקוח אם צריך
             };
         }
+        public async Task<bool> AssignNearestVolunteerAsync(int callId)
+        {
+            // שליפת הקריאה לפי מזהה
+            var call = await _callDal.GetCallByIdAsync(callId);
+            if (call == null || call.CallLatitude == null || call.CallLongitude == null)
+                return false;
+
+            // שליפת כל המתנדבים הזמינים
+            var volunteers = await _volunteerDal.GetAvailableVolunteersAsync();
+            if (volunteers == null || !volunteers.Any())
+                return false;
+
+            Volunteer closestVolunteer = null;
+            double shortestDistance = double.MaxValue;
+
+            foreach (var volunteer in volunteers)
+            {
+                if (volunteer.VolunteerLatitude == null || volunteer.VolunteerLongitude == null)
+                    continue;
+
+                // חישוב מרחק בין הקריאה למתנדב
+                double distance = await _googleMapsService.GetDistanceInKmAsync(
+                    call.CallLatitude,
+                    call.CallLongitude,
+                    volunteer.VolunteerLatitude,
+                    volunteer.VolunteerLongitude
+                );
+
+                if (distance < shortestDistance)
+                {
+                    shortestDistance = distance;
+                    closestVolunteer = volunteer;
+                }
+            }
+
+            if (closestVolunteer != null)
+            {
+                // עדכון הקריאה עם המתנדב שנבחר
+                call.FinalVolunteerId = closestVolunteer.Id;
+                await _callDal.UpdateCall(call);
+                return true;
+            }
+
+            return false;
+        }
+
+        public async Task<int?> GetEstimatedArrivalTimeAsync(int volunteerId, int callId)
+        {
+            var call = await _callDal.GetCallByIdAsync(callId);
+            var volunteer = await _volunteerDal.GetVolunteerByIdAsync(volunteerId);
+
+            if (call == null || volunteer == null ||
+                call.CallLatitude == null || call.CallLongitude == null ||
+                volunteer.VolunteerLatitude == null || volunteer.VolunteerLongitude == null)
+            {
+                return null;
+            }
+
+            return await _googleMapsService.GetEstimatedArrivalTimeInMinutesAsync(
+                volunteer.VolunteerLatitude, volunteer.VolunteerLatitude,
+                call.CallLatitude, call.CallLongitude
+            );
+        }
     }
-}
+
+
+
+    }
+
 

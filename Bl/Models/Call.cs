@@ -10,7 +10,7 @@ namespace Bl.Models
 {
     public partial class Call
     {
-     
+
         public int CallId { get; set; }
 
         public DateTime CallTime { get; set; }

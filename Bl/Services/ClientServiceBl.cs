@@ -13,6 +13,7 @@ namespace Bl.Services
     {
         private readonly ClientDal _clientDal;
 
+
         public ClientServiceBl(ClientDal clientDal)
         {
             _clientDal = clientDal;

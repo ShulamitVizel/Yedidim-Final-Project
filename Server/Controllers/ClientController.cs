@@ -14,13 +14,15 @@ namespace Server.Controllers
             _clientBl = clientBl;
         }
 
-        [HttpGet]
+        // GET api/client/getAllClients
+        [HttpGet("getAllClients")]
         public ActionResult<List<Bl.Models.Client>> GetAllClients()
         {
             return Ok(_clientBl.GetAllClients());
         }
 
-        [HttpGet("{id}")]
+        // GET api/client/getClientById/{id}
+        [HttpGet("getClientById/{id}")]
         public ActionResult<Bl.Models.Client> GetClientById(int id)
         {
             var client = _clientBl.GetClientById(id);
@@ -29,14 +31,16 @@ namespace Server.Controllers
             return Ok(client);
         }
 
-        [HttpPost]
+        // POST api/client/createClient
+        [HttpPost("createClient")]
         public IActionResult CreateClient([FromBody] Bl.Models.Client client)
         {
             _clientBl.CreateClient(client);
             return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
         }
 
-        [HttpDelete("{id}")]
+        // DELETE api/client/deleteClient/{id}
+        [HttpDelete("deleteClient/{id}")]
         public IActionResult DeleteClient(int id)
         {
             var client = _clientBl.GetClientById(id);
@@ -47,5 +51,5 @@ namespace Server.Controllers
             return NoContent();
         }
     }
-
 }
+

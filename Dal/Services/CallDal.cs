@@ -26,6 +26,11 @@ namespace Dal.Services
                 .Include(c => c.FinalVolunteer)
                 .FirstOrDefault(c => c.CallId == id);
         }
+        public async Task<Call> GetCallByIdAsync(int id)
+        {
+            return await _context.Calls.FindAsync(id);
+        }
+
         public void CreateCall(Call call) 
         {
             _context.Calls.Add(call);
@@ -46,7 +51,6 @@ namespace Dal.Services
                 throw new Exception("The call was not found in the system.");
             }
         }
-        //public void UpdateCall(Call call){}
         public async Task UpdateCall(Call call)
         {
             _context.Calls.Update(call);
@@ -78,6 +82,14 @@ namespace Dal.Services
 
             _context.SaveChanges(); 
         }
+
+        public async Task<List<Volunteer>> GetAvailableVolunteersAsync()
+        {
+            return await _context.Volunteers
+                .Where(v => v.IsAvailable)
+                .ToListAsync();
+        }
+
 
 
 

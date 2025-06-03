@@ -79,7 +79,12 @@ namespace Dal.Services
                     throw new Exception("The volunteer was not found for update.");
                 }
             }
+
+        public async Task<Volunteer> GetVolunteerByIdAsync(int volunteerId)
+        {
+            return await _context.Volunteers.FindAsync(volunteerId);
         }
+    }
     }
 
 
