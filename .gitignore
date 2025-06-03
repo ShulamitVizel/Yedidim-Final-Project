@@ -8,9 +8,7 @@
 bin/
 obj/
 
-# Database files (optional - remove if you want to include DB)
-*.mdf
-*.ldf
+
 
 # Others
 *.log
