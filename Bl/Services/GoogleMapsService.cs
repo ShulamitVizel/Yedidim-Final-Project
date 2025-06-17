@@ -1,59 +1,58 @@
 ﻿using Bl.Api;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Net.Http;
+
+
 
 namespace Bl.Services
 {
-    public class GoogleMapsService:IGoogleMapsService
+    public class GoogleMapsService : IGoogleMapsService
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
 
-        public GoogleMapsService(IConfiguration configuration)
+        public GoogleMapsService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
-            _httpClient = new HttpClient();
-        }
+            _httpClient = httpClientFactory.CreateClient();
+        }   
 
-        public async Task<double> GetDistanceInKmAsync(double originLat, double originLng, double destLat, double destLng)
+        private string ApiKey => _configuration["GoogleMaps:ApiKey"]!;
+
+        public async Task<double> GetDistanceInKmAsync(
+            double originLat, double originLng,
+            double destLat, double destLng)
         {
-            string apiKey = _configuration["GoogleMaps:ApiKey"];
-            string url = $"https://maps.googleapis.com/maps/api/distancematrix/json?origins={originLat},{originLng}&destinations={destLat},{destLng}&key={apiKey}";
+            var url = $"https://maps.googleapis.com/maps/api/distancematrix/json?" +
+                      $"origins={originLat},{originLng}&destinations={destLat},{destLng}&key={ApiKey}";
 
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode)
-                throw new Exception("Google Maps API call failed");
+            var res = await _httpClient.GetAsync(url);
+            res.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject(json);
-
-            try
-            {
-                double distanceInMeters = data.rows[0].elements[0].distance.value;
-                return distanceInMeters / 1000.0;
-            }
-            catch
-            {
-                throw new Exception("Invalid response from Google Maps API");
-            }
+            dynamic data = JsonConvert.DeserializeObject(await res.Content.ReadAsStringAsync())!;
+            double meters = data.rows[0].elements[0].distance.value;
+            return meters / 1000.0;
         }
-        public async Task<int> GetEstimatedArrivalTimeInMinutesAsync(double originLat, double originLng, double destLat, double destLng)
+
+        public async Task<int> GetEstimatedArrivalTimeInMinutesAsync(
+            double originLat, double originLng,
+            double destLat, double destLng)
         {
-            string apiKey = _configuration["GoogleMaps:ApiKey"];
-            string url = $"https://maps.googleapis.com/maps/api/distancematrix/json?" +
-                         $"origins={originLat},{originLng}&destinations={destLat},{destLng}&key={apiKey}";
+            var url = $"https://maps.googleapis.com/maps/api/distancematrix/json?" +
+                      $"origins={originLat},{originLng}&destinations={destLat},{destLng}&key={ApiKey}";
 
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return -1;
+            var res = await _httpClient.GetAsync(url);
+            res.EnsureSuccessStatusCode();
 
-            var json = await response.Content.ReadAsStringAsync();
-            dynamic data = JsonConvert.DeserializeObject(json);
-
-            var durationInSeconds = data.rows[0].elements[0].duration.value;
-            return (int)durationInSeconds / 60; // דקות
+            dynamic data = JsonConvert.DeserializeObject(await res.Content.ReadAsStringAsync())!;
+            int seconds = data.rows[0].elements[0].duration.value;
+            return seconds / 60;
         }
-
-        // פונקציות נוספות ייכנסו לפה בעתיד...
     }
 
+
+    // פונקציות נוספות ייכנסו לפה בעתיד...
 }
+
+

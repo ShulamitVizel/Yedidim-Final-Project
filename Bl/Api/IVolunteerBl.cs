@@ -1,22 +1,17 @@
-﻿using Bl.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dal.Models;
 
 namespace Bl.Api
 {
     public interface IVolunteerBl
     {
+        Task<List<Volunteer>> GetAllVolunteersAsync();
+        Task<Volunteer?> GetVolunteerByIdAsync(int id);
+        Task<List<Volunteer>> GetAvailableVolunteersAsync();
 
-        List<Volunteer> GetAllVolunteers();
-        Volunteer? GetVolunteerById(int id);
-        List<Volunteer> GetAvailableVolunteers();
-        void AddVolunteer(Volunteer volunteer);
-        void DeleteVolunteer(int volunteerId);
-        void UpdateVolunteer(Volunteer volunteer);
-
-
+        Task AddVolunteerAsync(Volunteer volunteer);
+        Task DeleteVolunteerAsync(int volunteerId);
+        Task UpdateVolunteerAsync(Volunteer volunteer);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Bl.Api;
+using Dal.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Server.Controllers
@@ -7,59 +8,52 @@ namespace Server.Controllers
     [Route("api/[controller]")]
     public class VolunteerController : ControllerBase
     {
-        private readonly IVolunteerBl _volunteerBl;
+        private readonly IVolunteerBl _bl;
 
-        public VolunteerController(IVolunteerBl volunteerBl)
+        public VolunteerController(IVolunteerBl bl) => _bl = bl;
+
+        // GET /api/volunteer
+        [HttpGet]
+        public async Task<ActionResult<List<Volunteer>>> GetAll()
+            => Ok(await _bl.GetAllVolunteersAsync());
+
+        // GET /api/volunteer/{id}
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Volunteer>> Get(int id)
         {
-            _volunteerBl = volunteerBl;
+            var vol = await _bl.GetVolunteerByIdAsync(id);
+            return vol is null ? NotFound() : Ok(vol);
         }
 
-        // GET api/volunteer/getAllVolunteers
-        [HttpGet("getAllVolunteers")]
-        public ActionResult<List<Bl.Models.Volunteer>> GetAllVolunteers()
+        // GET /api/volunteer/available
+        [HttpGet("available")]
+        public async Task<ActionResult<List<Volunteer>>> GetAvailable()
+            => Ok(await _bl.GetAvailableVolunteersAsync());
+
+        // POST /api/volunteer
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] Volunteer v)
         {
-            return Ok(_volunteerBl.GetAllVolunteers());
+            await _bl.AddVolunteerAsync(v);
+            return CreatedAtAction(nameof(Get), new { id = v.VolunteerId }, v);
         }
 
-        // GET api/volunteer/getVolunteerById/{id}
-        [HttpGet("getVolunteerById/{id}")]
-        public ActionResult<Bl.Models.Volunteer> GetVolunteerById(int id)
+        // PUT /api/volunteer/{id}
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Put(int id, [FromBody] Volunteer v)
         {
-            var volunteer = _volunteerBl.GetVolunteerById(id);
-            if (volunteer == null)
-                return NotFound();
-            return Ok(volunteer);
+            if (id != v.VolunteerId) return BadRequest("ID in route and body mismatch");
+            await _bl.UpdateVolunteerAsync(v);
+            return NoContent();
         }
 
-        // GET api/volunteer/getAvailableVolunteers
-        [HttpGet("getAvailableVolunteers")]
-        public ActionResult<List<Bl.Models.Volunteer>> GetAvailableVolunteers()
+        // DELETE /api/volunteer/{id}
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            return Ok(_volunteerBl.GetAvailableVolunteers());
+            await _bl.DeleteVolunteerAsync(id);
+            return NoContent();
         }
 
-        // POST api/volunteer/addVolunteer
-        [HttpPost("addVolunteer")]
-        public IActionResult AddVolunteer([FromBody] Bl.Models.Volunteer volunteer)
-        {
-            _volunteerBl.AddVolunteer(volunteer);
-            return Ok();
-        }
-
-        // DELETE api/volunteer/deleteVolunteer/{id}
-        [HttpDelete("deleteVolunteer/{id}")]
-        public IActionResult DeleteVolunteer(int id)
-        {
-            _volunteerBl.DeleteVolunteer(id);
-            return Ok();
-        }
-
-        // PUT api/volunteer/updateVolunteer
-        [HttpPut("updateVolunteer")]
-        public IActionResult UpdateVolunteer([FromBody] Bl.Models.Volunteer volunteer)
-        {
-            _volunteerBl.UpdateVolunteer(volunteer);
-            return Ok();
-        }
     }
 }

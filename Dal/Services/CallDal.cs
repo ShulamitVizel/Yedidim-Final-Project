@@ -12,6 +12,7 @@ namespace Dal.Services
     public class CallDal
     {
         private readonly dbClass _context;
+        private readonly VolunteerDal _volunteerDal;
 
         public CallDal(dbClass context)
         {
@@ -20,53 +21,50 @@ namespace Dal.Services
 
         //public GetAllCalls() { }
         //public GetCallByID() { }
-        public Dal.Models.Call? GetCallById(int id)
-        {
-            return _context.Calls
-                .Include(c => c.FinalVolunteer)
-                .FirstOrDefault(c => c.CallId == id);
-        }
-        public async Task<Call> GetCallByIdAsync(int id)
-        {
-            return await _context.Calls.FindAsync(id);
-        }
 
-        public void CreateCall(Call call) 
+        public async Task<Call?> GetCallByIdAsync(int id) =>
+            await _context.Calls
+                      .Include(c => c.FinalVolunteer)
+                      .FirstOrDefaultAsync(c => c.CallId == id);
+
+
+        //public async Task<Call> GetCallByIdAsync(int id)
+        //{
+        //    return await _context.Calls.FindAsync(id);
+        //}
+
+        public async Task<int> CreateCallAsync(Call call)
         {
             _context.Calls.Add(call);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+            return call.CallId;
         }
-        public void DeleteCall(int callId) 
+        public async Task DeleteCallAsync(int callId)
         {
-            var call = _context.Calls.Include(c => c.Volunteers) 
-                         .FirstOrDefault(c => c.CallId == callId);
-
-            if (call != null)
-            {
-                _context.Calls.Remove(call);
-                _context.SaveChanges(); 
-            }
-            else
-            {
-                throw new Exception("The call was not found in the system.");
-            }
+            var call = await _context.Calls
+                                 .Include(c => c.Volunteers)
+                                 .FirstOrDefaultAsync(c => c.CallId == callId)
+                             ?? throw new Exception("this call does not exist in the system");
+            _context.Calls.Remove(call);
+            await _context.SaveChangesAsync();
         }
-        public async Task UpdateCall(Call call)
+    
+
+        public async Task UpdateCallAsync(Call call)
         {
             _context.Calls.Update(call);
             await _context.SaveChangesAsync();
         }
-        public void AssignVolunteerToCall(int callId, int volunteerId)
+        public async Task AssignVolunteerToCallAsync(int callId, int volunteerId)
         {
-            var call = _context.Calls.Include(c => c.Volunteers)
-                                     .FirstOrDefault(c => c.CallId == callId);
+             var call = await GetCallByIdAsync(callId);
 
             if (call == null)
             {
                 throw new Exception("The call was not found in the system");
             }
 
-            var volunteer = _context.Volunteers.FirstOrDefault(v => v.VolunteerId == volunteerId);
+            var volunteer = await _volunteerDal.GetVolunteerByIdAsync(volunteerId);
 
             if (volunteer == null)
             {
@@ -83,12 +81,12 @@ namespace Dal.Services
             _context.SaveChanges(); 
         }
 
-        public async Task<List<Volunteer>> GetAvailableVolunteersAsync()
-        {
-            return await _context.Volunteers
-                .Where(v => v.IsAvailable)
-                .ToListAsync();
-        }
+        //public async Task<List<Volunteer>> GetAvailableVolunteersAsync()
+        //{
+        //    return await _context.Volunteers
+        //        .Where(v => v.IsAvailable)
+        //        .ToListAsync();
+        //}
 
 
 

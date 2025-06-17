@@ -18,71 +18,38 @@ namespace Dal.Services
                 _context = context;
             }
 
-            public List<Volunteer> GetAllVolunteers()
-            {
-                return _context.Volunteers.ToList();
-            }
+        public async Task<List<Volunteer>> GetAllVolunteersAsync() =>
+                            await _context.Volunteers.ToListAsync();
 
-            public Volunteer? GetVolunteerById(int id)
-            {
-                return _context.Volunteers.FirstOrDefault(v => v.VolunteerId == id);
-            }
+        public async Task<Volunteer?> GetVolunteerByIdAsync(int id) =>
+          await _context.Volunteers.FirstOrDefaultAsync(v => v.VolunteerId == id);
+        public async Task<List<Volunteer>> GetAvailableVolunteersAsync() =>
+        await _context.Volunteers.Where(v => v.IsAvailable).ToListAsync();
 
-            public async Task<List<Volunteer>> GetAvailableVolunteersAsync()
-            {
-                return await _context.Volunteers
-                    .Where(v => v.IsAvailable)
-                    .ToListAsync();
-            }
-
-            public void AddVolunteer(Volunteer volunteer)
-            {
-                _context.Volunteers.Add(volunteer);
-                _context.SaveChanges();
-            }
-
-            public void DeleteVolunteer(int volunteerId)
-            {
-                var volunteer = _context.Volunteers
-                    .Include(v => v.Calls)
-                    .FirstOrDefault(v => v.VolunteerId == volunteerId);
-
-                if (volunteer != null)
-                {
-                    _context.Volunteers.Remove(volunteer);
-                    _context.SaveChanges();
-                }
-                else
-                {
-                    throw new Exception("The volunteer was not found in the system.");
-                }
-            }
-
-            public void UpdateVolunteer(Volunteer volunteer)
-            {
-                var existingVolunteer = _context.Volunteers
-                    .FirstOrDefault(v => v.VolunteerId == volunteer.VolunteerId);
-
-                if (existingVolunteer != null)
-                {
-                    existingVolunteer.Name = volunteer.Name;
-                    existingVolunteer.Level = volunteer.Level;
-                    existingVolunteer.IsAvailable = volunteer.IsAvailable;
-                    existingVolunteer.PhoneNumber = volunteer.PhoneNumber;
-                    existingVolunteer.VolunteerLatitude = volunteer.VolunteerLatitude;
-                    existingVolunteer.VolunteerLongitude = volunteer.VolunteerLongitude;
-
-                    _context.SaveChanges();
-                }
-                else
-                {
-                    throw new Exception("The volunteer was not found for update.");
-                }
-            }
-
-        public async Task<Volunteer> GetVolunteerByIdAsync(int volunteerId)
+        public async Task AddVolunteerAsync(Volunteer volunteer)
         {
-            return await _context.Volunteers.FindAsync(volunteerId);
+            _context.Volunteers.Add(volunteer);
+            await _context.SaveChangesAsync();
+        }
+
+
+        public async Task DeleteVolunteerAsync(int volunteerId)
+        {
+            var volunteer = await _context.Volunteers
+                                          .Include(v => v.Calls)
+                                          .FirstOrDefaultAsync(v => v.VolunteerId == volunteerId);
+
+            if (volunteer is null)
+                throw new KeyNotFoundException("Volunteer not found");
+
+            _context.Volunteers.Remove(volunteer);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateVolunteerAsync(Volunteer volunteer)
+        {
+            _context.Volunteers.Update(volunteer);
+            await _context.SaveChangesAsync();
         }
     }
     }

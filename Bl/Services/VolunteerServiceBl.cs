@@ -1,88 +1,35 @@
 ﻿using Bl.Api;
-using Bl.Models;
+using Dal.Models;
 using Dal.Services;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Bl.Services
 {
     public class VolunteerServiceBl : IVolunteerBl
     {
-        private readonly VolunteerDal _volunteerDal;
+        private readonly VolunteerDal _dal;
+        public VolunteerServiceBl(VolunteerDal dal) => _dal = dal;
 
-        public VolunteerServiceBl(VolunteerDal volunteerDal)
-        {
-            _volunteerDal = volunteerDal;
-        }
+        public async Task<List<Volunteer>> GetAllVolunteersAsync() =>
+            await _dal.GetAllVolunteersAsync();
 
-        public List<Volunteer> GetAllVolunteers()
-        {
-            var dalVolunteers = _volunteerDal.GetAllVolunteers();
-            return dalVolunteers.Select(MapDalToBl).ToList();
-        }
+        public async Task<Volunteer?> GetVolunteerByIdAsync(int id) =>
+            await _dal.GetVolunteerByIdAsync(id);
 
-        public Volunteer? GetVolunteerById(int id)
-        {
-            var dalVolunteer = _volunteerDal.GetVolunteerById(id);
-            return dalVolunteer == null ? null : MapDalToBl(dalVolunteer);
-        }
+        public async Task<List<Volunteer>> GetAvailableVolunteersAsync() =>
+            await _dal.GetAvailableVolunteersAsync();
 
-        public List<Volunteer> GetAvailableVolunteers()
-        {
-            var dalVolunteers = _volunteerDal.GetAvailableVolunteersAsync().Result;
-            return dalVolunteers.Select(MapDalToBl).ToList();
-        }
+        public async Task AddVolunteerAsync(Volunteer v) =>
+            await _dal.AddVolunteerAsync(v);
 
-        public void AddVolunteer(Volunteer volunteer)
-        {
-            var dalVolunteer = MapBlToDal(volunteer);
-            _volunteerDal.AddVolunteer(dalVolunteer);
-        }
+        public async Task DeleteVolunteerAsync(int id) =>
+            await _dal.DeleteVolunteerAsync(id);
 
-        public void DeleteVolunteer(int volunteerId)
-        {
-            _volunteerDal.DeleteVolunteer(volunteerId);
-        }
+        public async Task UpdateVolunteerAsync(Volunteer v) =>
+            await _dal.UpdateVolunteerAsync(v);
 
-        public void UpdateVolunteer(Volunteer volunteer)
-        {
-            var dalVolunteer = MapBlToDal(volunteer);
-            _volunteerDal.UpdateVolunteer(dalVolunteer);
-        }
-
-        // מיפוי מ-BL ל-DAL
-        private Dal.Models.Volunteer MapBlToDal(Volunteer bl)
-        {
-            var split = bl.VolunteerLocation.Split(',');
-            return new Dal.Models.Volunteer
-            {
-                VolunteerId = bl.VolunteerId,
-                Name = bl.Name,
-                PhoneNumber = bl.PhoneNumber,
-                Level = bl.Level,
-                IsAvailable = bl.IsAvailable,
-                VolunteerLatitude = double.Parse(split[0]),
-                VolunteerLongitude = double.Parse(split[1])
-            };
-        }
-
-        // מיפוי מ-DAL ל-BL
-        private Volunteer MapDalToBl(Dal.Models.Volunteer dal)
-        {
-            return new Volunteer
-            {
-                VolunteerId = dal.VolunteerId,
-                Name = dal.Name,
-                PhoneNumber = dal.PhoneNumber,
-                Level = dal.Level,
-                IsAvailable = dal.IsAvailable,
-                VolunteerLocation = $"{dal.VolunteerLatitude},{dal.VolunteerLongitude}"
-            };
-        }
     }
-
 }
+

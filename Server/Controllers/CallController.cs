@@ -1,98 +1,97 @@
-﻿using Bl.Services;
-using Bl.Services;
-using Dal.Services;
+﻿using Dal.Models;
+using Bl.Api;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Server.Controllers
+namespace Server.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class CallController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CallController : ControllerBase
+    private readonly ICallBl _bl;
+    public CallController(ICallBl bl) => _bl = bl;
+
+    // GET api/call/{id}
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<Call>> Get(int id)
     {
-        private readonly CallServiceBl _callBl;
+        var call = await _bl.GetCallByIdAsync(id);
+        return call is null ? NotFound(new { error = "Call not found." }) : Ok(call);
+    }
 
-        public CallController(CallServiceBl callBl)
-        {
-            _callBl = callBl;
-        }
+    // POST api/call
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] Call call)
+    {
+        if (call is null)
+            return BadRequest(new { error = "Call data is missing." });
 
-        // GET api/call/getCallById/{id}
-        [HttpGet("getCallById/{id}")]
-        public ActionResult<Bl.Models.Call> GetCallById(int id)
-        {
-            var call = _callBl.GetCallById(id);
-            if (call == null)
-            {
-                return NotFound();
-            }
-            return Ok(call);
-        }
+        var id = await _bl.CreateCallAsync(call);
+        return CreatedAtAction(nameof(Get), new { id }, call);
+    }
 
-        // POST api/call/createCall
-        [HttpPost("createCall")]
-        public ActionResult CreateCall([FromBody] Bl.Models.Call call)
-        {
-            _callBl.CreateCall(call);
-            return CreatedAtAction(nameof(GetCallById), new { id = call.CallId }, call);
-        }
+    // PUT api/call/{id}
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Put(int id, [FromBody] Call call)
+    {
+        if (call is null || id != call.CallId)
+            return BadRequest(new { error = "Invalid call ID or missing data." });
 
-        // PUT api/call/updateCall/{id}
-        [HttpPut("updateCall/{id}")]
-        public IActionResult UpdateCall(int id, [FromBody] Bl.Models.Call call)
+        await _bl.UpdateCallAsync(call);
+        return NoContent();
+    }
+
+    // DELETE api/call/{id}
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _bl.DeleteCallAsync(id);
+        return NoContent();
+    }
+
+    // POST api/call/{callId}/volunteers/{volunteerId}
+    [HttpPost("{callId:int}/volunteers/{volunteerId:int}")]
+    public async Task<IActionResult> AssignVolunteer(int callId, int volunteerId)
+    {
+        try
         {
-            if (id != call.CallId)
-            {
-                return BadRequest();
-            }
-            _callBl.UpdateCall(call);
+            await _bl.AssignVolunteerToCallAsync(callId, volunteerId);
             return NoContent();
         }
-
-        // DELETE api/call/deleteCall/{id}
-        [HttpDelete("deleteCall/{id}")]
-        public IActionResult DeleteCall(int id)
+        catch (KeyNotFoundException ex)
         {
-            _callBl.DeleteCall(id);
-            return NoContent();
+            return NotFound(new { error = ex.Message });
         }
-
-        // POST api/call/assignVolunteerToCall/{id}
-        [HttpPost("assignVolunteerToCall/{id}")]
-        public IActionResult AssignVolunteerToCall(int id, [FromBody] int volunteerId)
+        catch (Exception ex)
         {
-            _callBl.AssignVolunteerToCall(id, volunteerId);
-            return NoContent();
+            return StatusCode(500, new { error = ex.Message });
         }
+    }
 
-        [HttpPost("calls/{callId}/assign-best-volunteer")]
-        public async Task<IActionResult> AssignBestVolunteer(int callId)
-        {
-            bool assigned = await _callBl.AssignNearestVolunteerAsync(callId);
-            if (assigned)
-                return Ok(new { message = "Volunteer assigned successfully" });
-            else
-                return NotFound(new { message = "Call or suitable volunteer not found" });
-        }
-        [HttpGet("calls/{callId}/matching-volunteers")]
-        public async Task<IActionResult> GetMatchingVolunteers(int callId)
-        {
-            var call = await _callDal.GetCallByIdAsync(callId);
-            if (call == null) return NotFound();
+    // POST api/call/{callId}/assign-best
+    [HttpPost("{callId:int}/assign-best")]
+    public async Task<IActionResult> AssignBest(int callId)
+    {
+        bool assigned = await _bl.AssignNearestVolunteerAsync(callId);
+        return assigned ? Ok(new { message = "Volunteer assigned successfully." })
+                        : NotFound(new { error = "Call or suitable volunteer not found." });
+    }
 
-            var volunteers = await _callBl.AssignNearestVolunteerAsync(call);
-            return Ok(volunteers);
-        }
+    // GET api/call/{callId}/matching-volunteers
+    [HttpGet("{callId:int}/matching-volunteers")]
+    public async Task<IActionResult> GetMatching(int callId)
+    {
+        var volunteers = await _bl.GetMatchingVolunteersAsync(callId);
+        return (volunteers is null || volunteers.Count == 0) ? NotFound(new { error = "No matching volunteers found." })
+                                                             : Ok(volunteers);
+    }
 
-        [HttpGet("estimated-arrival")]
-        public async Task<IActionResult> GetEstimatedArrivalTime([FromQuery] int volunteerId, [FromQuery] int callId)
-        {
-            var etaMinutes = await _callBl.GetEstimatedArrivalTimeAsync(volunteerId, callId);
-            if (etaMinutes == null)
-                return NotFound("Call or volunteer not found or missing location");
-
-            return Ok(new { EstimatedArrivalTimeMinutes = etaMinutes });
-        }
-
+    // GET api/call/{callId}/eta?volunteerId=5
+    [HttpGet("{callId:int}/eta")]
+    public async Task<IActionResult> GetEta(int callId, [FromQuery] int volunteerId)
+    {
+        var eta = await _bl.GetEstimatedArrivalTimeAsync(volunteerId, callId);
+        return eta is null ? NotFound(new { error = "Call or volunteer location missing." })
+                           : Ok(new { estimatedArrivalMinutes = eta });
     }
 }
-

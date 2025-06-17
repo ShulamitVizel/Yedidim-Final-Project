@@ -1,4 +1,5 @@
 ﻿using Bl.Api;
+using Dal.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Server.Controllers
@@ -7,49 +8,34 @@ namespace Server.Controllers
     [Route("api/[controller]")]
     public class ClientController : ControllerBase
     {
-        private readonly IClientBl _clientBl;
+        private readonly IClientBl _bl;
+        public ClientController(IClientBl bl) => _bl = bl;
 
-        public ClientController(IClientBl clientBl)
+        [HttpGet]
+        public async Task<ActionResult<List<Client>>> GetAll() =>
+            Ok(await _bl.GetAllClientsAsync());
+
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Client>> Get(int id)
         {
-            _clientBl = clientBl;
+            var client = await _bl.GetClientByIdAsync(id);
+            return client is null ? NotFound() : Ok(client);
         }
 
-        // GET api/client/getAllClients
-        [HttpGet("getAllClients")]
-        public ActionResult<List<Bl.Models.Client>> GetAllClients()
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] Client client)
         {
-            return Ok(_clientBl.GetAllClients());
+            await _bl.CreateClientAsync(client);
+            return CreatedAtAction(nameof(Get), new { id = client.ClientId }, client);
         }
 
-        // GET api/client/getClientById/{id}
-        [HttpGet("getClientById/{id}")]
-        public ActionResult<Bl.Models.Client> GetClientById(int id)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var client = _clientBl.GetClientById(id);
-            if (client == null)
-                return NotFound();
-            return Ok(client);
-        }
-
-        // POST api/client/createClient
-        [HttpPost("createClient")]
-        public IActionResult CreateClient([FromBody] Bl.Models.Client client)
-        {
-            _clientBl.CreateClient(client);
-            return CreatedAtAction(nameof(GetClientById), new { id = client.ClientId }, client);
-        }
-
-        // DELETE api/client/deleteClient/{id}
-        [HttpDelete("deleteClient/{id}")]
-        public IActionResult DeleteClient(int id)
-        {
-            var client = _clientBl.GetClientById(id);
-            if (client == null)
-                return NotFound();
-
-            _clientBl.DeleteClient(client);
+            await _bl.DeleteClientAsync(id);
             return NoContent();
         }
     }
+
 }
 

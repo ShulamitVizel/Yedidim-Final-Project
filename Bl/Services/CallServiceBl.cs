@@ -1,12 +1,10 @@
-﻿using Bl.Models;
+﻿using Dal.Models;
 using Bl.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Dal;
-using Dal.Models;
 using Dal.Services;
 using Bl.Api;
 using Microsoft.Extensions.Configuration;
@@ -17,139 +15,91 @@ namespace Bl.Services
     {
         private readonly CallDal _callDal;
         private readonly VolunteerDal _volunteerDal;
-        private readonly IGoogleMapsService _googleMapsService;
+        private readonly IGoogleMapsService _maps;
 
-        public CallServiceBl(CallDal callDal, VolunteerDal volunteerDal, IGoogleMapsService googleMapsService)
+        public CallServiceBl(CallDal callDal,
+                             VolunteerDal volunteerDal,
+                             IGoogleMapsService maps)
+            => (_callDal, _volunteerDal, _maps) = (callDal, volunteerDal, maps);
+
+        /* ---------- CRUD בסיסי ---------- */
+
+        public async Task<int> CreateCallAsync(Call call)
         {
-            _volunteerDal = volunteerDal;
-
-            _callDal = callDal;
-            _googleMapsService = googleMapsService;
+            await _callDal.CreateCallAsync(call);
+            return call.CallId;                    // ה-ID הופק ע״י EF
         }
 
-        public void CreateCall(Models.Call call)
-        {
-            var dalCall = MapBlToDal(call);
-            _callDal.CreateCall(dalCall);
-        }
+        public async Task DeleteCallAsync(int callId) =>
+            await _callDal.DeleteCallAsync(callId);
 
-        public void DeleteCall(int callId)
-        {
-            _callDal.DeleteCall(callId);
-        }
+        public async Task UpdateCallAsync(Call call) =>
+            await _callDal.UpdateCallAsync(call);
 
-        public void UpdateCall(Models.Call call)
-        {
-            var dalCall = MapBlToDal(call);
-            _callDal.UpdateCall(dalCall).Wait(); // בגלל שזה async ב-DAL
-        }
+        public async Task<Call?> GetCallByIdAsync(int callId) =>
+            await _callDal.GetCallByIdAsync(callId);
 
-        public Models.Call GetCallById(int callId)
-        {
-            var dalCall = _callDal.GetCallById(callId);
-            return dalCall == null ? null : MapDalToBl(dalCall);
-        }
-        public void AssignVolunteerToCall(int callId, int volunteerId)
-        {
-            _callDal.AssignVolunteerToCall(callId, volunteerId);
-        }
+        /* ---------- שיוך מתנדבים ---------- */
 
-        // Mapping Functions
-        private Dal.Models.Call MapBlToDal(Models.Call blCall)
-        {
-            return new Dal.Models.Call
-            {
-                CallId = blCall.CallId,
-                CallTime = blCall.CallTime,
-                ClientId = blCall.ClientId,
-                FinalVolunteerId = blCall.FinalVolunteerId,
-                CallType = blCall.CallType,
-                CallLatitude = double.TryParse(blCall.CallLocation, out var lat) ? lat : 0, // אם שדה שונה
-                CallLongitude = 0, // או שתמפי בהתאם
-                // אין כאן Clients / Volunteers מלאים במיפוי פשוט
-            };
-        }
+        public async Task AssignVolunteerToCallAsync(int callId, int volunteerId) =>
+            await _callDal.AssignVolunteerToCallAsync(callId, volunteerId);
 
-        private Models.Call MapDalToBl(Dal.Models.Call dalCall)
-        {
-            return new Models.Call
-            {
-                CallId = dalCall.CallId,
-                CallTime = dalCall.CallTime,
-                ClientId = dalCall.ClientId,
-                FinalVolunteerId = dalCall.FinalVolunteerId,
-                CallType = dalCall.CallType,
-                CallLocation = $"{dalCall.CallLatitude},{dalCall.CallLongitude}", // אם את מאחדת לשדה אחד
-                // אפשרות להוסיף מיפוי מתנדבים ולקוח אם צריך
-            };
-        }
+        /* ---------- לוגיקה מתקדמת ---------- */
+
         public async Task<bool> AssignNearestVolunteerAsync(int callId)
         {
-            // שליפת הקריאה לפי מזהה
             var call = await _callDal.GetCallByIdAsync(callId);
-            if (call == null || call.CallLatitude == null || call.CallLongitude == null)
-                return false;
+            if (call is null) return false;
 
-            // שליפת כל המתנדבים הזמינים
             var volunteers = await _volunteerDal.GetAvailableVolunteersAsync();
-            if (volunteers == null || !volunteers.Any())
-                return false;
+            if (volunteers.Count == 0) return false;
 
-            Volunteer closestVolunteer = null;
-            double shortestDistance = double.MaxValue;
+            Volunteer? closest = null;
+            double shortest = double.MaxValue;
 
-            foreach (var volunteer in volunteers)
+            foreach (var v in volunteers)
             {
-                if (volunteer.VolunteerLatitude == null || volunteer.VolunteerLongitude == null)
-                    continue;
+                double dist = await _maps.GetDistanceInKmAsync(
+                    call.CallLatitude, call.CallLongitude,
+                    v.VolunteerLatitude, v.VolunteerLongitude);
 
-                // חישוב מרחק בין הקריאה למתנדב
-                double distance = await _googleMapsService.GetDistanceInKmAsync(
-                    call.CallLatitude,
-                    call.CallLongitude,
-                    volunteer.VolunteerLatitude,
-                    volunteer.VolunteerLongitude
-                );
-
-                if (distance < shortestDistance)
+                if (dist < shortest)
                 {
-                    shortestDistance = distance;
-                    closestVolunteer = volunteer;
+                    shortest = dist;
+                    closest = v;
                 }
             }
 
-            if (closestVolunteer != null)
-            {
-                // עדכון הקריאה עם המתנדב שנבחר
-                call.FinalVolunteerId = closestVolunteer.Id;
-                await _callDal.UpdateCall(call);
-                return true;
-            }
+            if (closest is null) return false;
 
-            return false;
+            call.FinalVolunteerId = closest.VolunteerId;
+            await _callDal.UpdateCallAsync(call);
+            return true;
         }
 
         public async Task<int?> GetEstimatedArrivalTimeAsync(int volunteerId, int callId)
         {
-            var call = await _callDal.GetCallByIdAsync(callId);
-            var volunteer = await _volunteerDal.GetVolunteerByIdAsync(volunteerId);
+            var (call, volunteer) = (await _callDal.GetCallByIdAsync(callId),
+                                     await _volunteerDal.GetVolunteerByIdAsync(volunteerId));
 
-            if (call == null || volunteer == null ||
-                call.CallLatitude == null || call.CallLongitude == null ||
-                volunteer.VolunteerLatitude == null || volunteer.VolunteerLongitude == null)
-            {
-                return null;
-            }
+            if (call is null || volunteer is null) return null;
 
-            return await _googleMapsService.GetEstimatedArrivalTimeInMinutesAsync(
-                volunteer.VolunteerLatitude, volunteer.VolunteerLatitude,
-                call.CallLatitude, call.CallLongitude
-            );
+            return await _maps.GetEstimatedArrivalTimeInMinutesAsync(
+                volunteer.VolunteerLatitude, volunteer.VolunteerLongitude,
+                call.CallLatitude, call.CallLongitude);
         }
+
+        /* אופציונלי – התאמת רשימת מתנדבים */
+        public async Task<List<Volunteer>> GetMatchingVolunteersAsync(int callId)
+        {
+            var call = await _callDal.GetCallByIdAsync(callId)
+                       ?? throw new KeyNotFoundException("Call not found");
+
+            return await _volunteerDal.GetAvailableVolunteersAsync();
+            // אפשר לסנן כאן עפ״י רדיוס/רמה/סוג-קריאה
+        }
+
     }
-
-
-
-    }
+}
 
 

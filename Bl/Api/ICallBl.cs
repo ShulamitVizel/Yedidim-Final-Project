@@ -1,18 +1,20 @@
-﻿using Bl.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dal.Models;           // Call, Volunteer
 
-
-public interface ICallBl
+namespace Bl.Api
 {
-    void CreateCall(Call call);
-    void DeleteCall(int callId);
-    void UpdateCall(Call call);
-    Call? GetCallById(int callId);
-    void AssignVolunteerToCall(int callId, int volunteerId);
-    Task<bool> AssignNearestVolunteerAsync(int callId);
+    public interface ICallBl
+    {
+        Task<int> CreateCallAsync(Call call);          // מחזיר ID שנוצר
+        Task DeleteCallAsync(int callId);
+        Task UpdateCallAsync(Call call);
+        Task<Call?> GetCallByIdAsync(int callId);
 
+        Task AssignVolunteerToCallAsync(int callId, int volunteerId);
+        Task<bool> AssignNearestVolunteerAsync(int callId);
+        Task<List<Volunteer>> GetMatchingVolunteersAsync(int callId);   // אופציונלי
+        Task<int?> GetEstimatedArrivalTimeAsync(int volunteerId, int callId);
+    }
 }
+
