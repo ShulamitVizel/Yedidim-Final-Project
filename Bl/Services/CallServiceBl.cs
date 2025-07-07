@@ -99,6 +99,16 @@ namespace Bl.Services
             // אפשר לסנן כאן עפ״י רדיוס/רמה/סוג-קריאה
         }
 
+        public async Task<int> GetMaxCallIdAsync()
+        {
+            return await _callDal.GetMaxCallIdAsync();
+        }
+
+        public async Task<List<Call>> GetAllCallsAsync()
+        {
+            return await _callDal.GetAllCallsAsync();
+        }
+
     }
 }
 

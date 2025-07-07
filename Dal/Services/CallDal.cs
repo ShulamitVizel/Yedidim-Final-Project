@@ -14,9 +14,10 @@ namespace Dal.Services
         private readonly dbClass _context;
         private readonly VolunteerDal _volunteerDal;
 
-        public CallDal(dbClass context)
+        public CallDal(dbClass context, VolunteerDal volunteerDal)
         {
             _context = context;
+            _volunteerDal = volunteerDal;
         }
 
         //public GetAllCalls() { }
@@ -52,33 +53,40 @@ namespace Dal.Services
 
         public async Task UpdateCallAsync(Call call)
         {
-            _context.Calls.Update(call);
+            var existingCall = await _context.Calls.FindAsync(call.CallId);
+            if (existingCall == null)
+            {
+                throw new Exception("Call not found in the system");
+            }
+
+            existingCall.CallTime = call.CallTime;
+            existingCall.ClientId = call.ClientId;
+            existingCall.FinalVolunteerId = call.FinalVolunteerId;
+            existingCall.CallType = call.CallType;
+            existingCall.CallLatitude = call.CallLatitude;
+            existingCall.CallLongitude = call.CallLongitude;
+
             await _context.SaveChangesAsync();
         }
         public async Task AssignVolunteerToCallAsync(int callId, int volunteerId)
         {
-             var call = await GetCallByIdAsync(callId);
-
+            // Check if call exists
+            var call = await _context.Calls.FindAsync(callId);
             if (call == null)
             {
                 throw new Exception("The call was not found in the system");
             }
 
+            // Check if volunteer exists
             var volunteer = await _volunteerDal.GetVolunteerByIdAsync(volunteerId);
-
             if (volunteer == null)
             {
                 throw new Exception("The volunteer was not found in the system");
             }
 
-            if (call.Volunteers.Any(v => v.VolunteerId == volunteerId))
-            {
-                throw new Exception("The volunteer has already been assigned to this call.");
-            }
-
-            call.Volunteers.Add(volunteer);
-
-            _context.SaveChanges(); 
+            // Simply update the call's FinalVolunteerId instead of using many-to-many
+            call.FinalVolunteerId = volunteerId;
+            await _context.SaveChangesAsync();
         }
 
         //public async Task<List<Volunteer>> GetAvailableVolunteersAsync()
@@ -88,11 +96,20 @@ namespace Dal.Services
         //        .ToListAsync();
         //}
 
+        public async Task<int> GetMaxCallIdAsync()
+        {
+            var maxId = await _context.Calls.MaxAsync(c => (int?)c.CallId) ?? 0;
+            return maxId;
+        }
 
-
-
-
-
+        public async Task<List<Call>> GetAllCallsAsync()
+        {
+            return await _context.Calls
+                .Include(c => c.FinalVolunteer)
+                .Include(c => c.Client)
+                .Include(c => c.Volunteers)
+                .ToListAsync();
+        }
     }
 }
 

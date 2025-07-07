@@ -1,6 +1,7 @@
 ﻿using Bl.Api;
 using Dal.Models;
 using Microsoft.AspNetCore.Mvc;
+using Server.DTOs;
 
 namespace Server.Controllers
 {
@@ -23,10 +24,23 @@ namespace Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Client client)
+        public async Task<IActionResult> Post([FromBody] ClientDto dto)
         {
-            await _bl.CreateClientAsync(client);
-            return CreatedAtAction(nameof(Get), new { id = client.ClientId }, client);
+            try
+            {
+                Console.WriteLine($"[ClientController] Incoming DTO: Name={dto.Name}, PhoneNumber={dto.PhoneNumber}");
+                var client = new Client {
+                    Name = dto.Name,
+                    PhoneNumber = dto.PhoneNumber
+                };
+                await _bl.CreateClientAsync(client);
+                return CreatedAtAction(nameof(Get), new { id = client.ClientId }, client);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ClientController] Error: {ex.Message}\n{ex.StackTrace}");
+                return StatusCode(500, new { error = ex.Message, stack = ex.StackTrace });
+            }
         }
 
         [HttpDelete("{id:int}")]

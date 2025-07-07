@@ -29,9 +29,21 @@ builder.Services.AddScoped<IVolunteerBl, VolunteerServiceBl>();
 builder.Services.AddScoped<IGoogleMapsService, GoogleMapsService>();
 
 // 6. MVC + Swagger
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -43,11 +55,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// 7. HTTPS redirection  (פורט 7145 חייב להתאים ל-launchSettings.json)
-app.UseHttpsRedirection(new HttpsRedirectionOptions
-{
-    HttpsPort = 7145
-});
+// 7. HTTPS redirection
+app.UseHttpsRedirection();
+
+app.UseCors();
 
 app.MapControllers();
 app.Run();

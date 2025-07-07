@@ -1,0 +1,481 @@
+{
+	"info": {
+		"_postman_id": "yedidim-api-tests",
+		"name": "Yedidim API Tests",
+		"description": "Comprehensive test collection for Yedidim backend API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Clients",
+			"item": [
+				{
+					"name": "Get All Clients",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/client",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Client by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/client/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"client",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Client",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							                            "raw": "{\n  \"name\": \"John Doe\",\n  \"phoneNumber\": \"0501234567\"\n}"
+						},
+						"url": {
+							"raw": "https://localhost:7145/api/client",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"client"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Client",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/client/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"client",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Volunteers",
+			"item": [
+				{
+					"name": "Get All Volunteers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Volunteer by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Available Volunteers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer/available",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer",
+								"available"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Volunteer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							                            "raw": "{\n  \"name\": \"Sarah Cohen\",\n  \"level\": \"Advanced\",\n  \"isAvailable\": true,\n  \"phoneNumber\": \"0529876543\",\n  \"volunteerLatitude\": 32.0853,\n  \"volunteerLongitude\": 34.7818\n}"
+						},
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Volunteer",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"volunteerId\": 1,\n  \"name\": \"Sarah Cohen Updated\",\n  \"level\": \"Expert\",\n  \"isAvailable\": false,\n  \"phoneNumber\": \"+972-52-987-6543\",\n  \"volunteerLatitude\": 32.0853,\n  \"volunteerLongitude\": 34.7818\n}"
+						},
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Volunteer",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/volunteer/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"volunteer",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Calls",
+			"item": [
+				{
+					"name": "Get Call by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Call",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"callTime\": \"2024-01-15T10:30:00\",\n  \"clientId\": 1,\n  \"finalVolunteerId\": 0,\n  \"callType\": \"Emergency\",\n  \"callLatitude\": 32.0853,\n  \"callLongitude\": 34.7818\n}"
+                        },
+						"url": {
+							"raw": "https://localhost:7145/api/call",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Call",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"callId\": 1,\n  \"callTime\": \"2024-01-15T10:30:00\",\n  \"clientId\": 1,\n  \"finalVolunteerId\": 1,\n  \"callType\": \"Emergency - Updated\",\n  \"callLatitude\": 32.0853,\n  \"callLongitude\": 34.7818\n}"
+						},
+						"url": {
+							"raw": "https://localhost:7145/api/call/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Call",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Volunteer to Call",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1/volunteers/1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1",
+								"volunteers",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Best Volunteer",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1/assign-best",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1",
+								"assign-best"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Matching Volunteers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1/matching-volunteers",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1",
+								"matching-volunteers"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get ETA",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://localhost:7145/api/call/1/eta?volunteerId=1",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7145",
+							"path": [
+								"api",
+								"call",
+								"1",
+								"eta"
+							],
+							"query": [
+								{
+									"key": "volunteerId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://localhost:7145",
+			"type": "string"
+		}
+	]
+} 

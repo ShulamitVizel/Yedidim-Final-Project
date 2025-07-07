@@ -83,8 +83,7 @@ public partial class dbClass : DbContext
                 .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.PhoneNumber)
-                .HasMaxLength(10)
-                .IsFixedLength()
+                .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
         });
 
@@ -96,15 +95,13 @@ public partial class dbClass : DbContext
                 .ValueGeneratedNever()
                 .HasColumnName("VolunteerID");
             entity.Property(e => e.Level)
-                .HasMaxLength(10)
-                .IsFixedLength()
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            .HasMaxLength(50) // or 50, to be safe
+            .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.PhoneNumber)
-                .HasMaxLength(10)
-                .IsFixedLength()
+                .HasMaxLength(50)
                 .UseCollation("SQL_Latin1_General_CP1_CI_AS");
             entity.Property(e => e.VolunteerLatitude).HasColumnName("VolunteerLatitude ");
             entity.Property(e => e.VolunteerLongitude).HasColumnName("VolunteerLongitude ");

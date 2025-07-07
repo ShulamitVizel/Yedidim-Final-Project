@@ -15,6 +15,8 @@ namespace Bl.Api
         Task<bool> AssignNearestVolunteerAsync(int callId);
         Task<List<Volunteer>> GetMatchingVolunteersAsync(int callId);   // אופציונלי
         Task<int?> GetEstimatedArrivalTimeAsync(int volunteerId, int callId);
+        Task<int> GetMaxCallIdAsync();
+        Task<List<Call>> GetAllCallsAsync();
     }
 }
 
